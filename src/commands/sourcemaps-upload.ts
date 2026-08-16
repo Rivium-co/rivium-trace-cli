@@ -5,7 +5,7 @@ import pc from 'picocolors';
 
 interface UploadOptions {
   directory: string;
-  dsn: string;
+  project?: string;
   release: string;
   token?: string;
   apiUrl?: string;
@@ -16,6 +16,7 @@ const DEFAULT_API_URL = 'https://trace.rivium.co';
 
 export async function sourcemapsUpload(opts: UploadOptions): Promise<void> {
   const token = resolveToken(opts.token);
+  const projectId = resolveProject(opts.project);
   const apiUrl = resolveApiUrl(opts.apiUrl);
   const directory = resolve(opts.directory);
   const files = collectMapFiles(directory);
@@ -30,7 +31,7 @@ export async function sourcemapsUpload(opts: UploadOptions): Promise<void> {
   console.log(`  directory: ${pc.dim(directory)}`);
   console.log(`  files:     ${pc.cyan(String(files.length))} (${humanBytes(totalBytes)})`);
   console.log(`  release:   ${pc.cyan(opts.release)}`);
-  console.log(`  dsn:       ${pc.dim(opts.dsn)}`);
+  console.log(`  project:   ${pc.dim(projectId)}`);
   console.log(`  api:       ${pc.dim(apiUrl)}`);
 
   if (opts.dryRun) {
@@ -45,7 +46,7 @@ export async function sourcemapsUpload(opts: UploadOptions): Promise<void> {
   console.log(pc.dim(`\nuploading...`));
   const started = Date.now();
 
-  const url = `${apiUrl}/api/projects/${encodeURIComponent(opts.dsn)}/sourcemaps`;
+  const url = `${apiUrl}/api/projects/${encodeURIComponent(projectId)}/sourcemaps`;
   const form = new FormData();
   form.append('release', opts.release);
   for (const f of files) {
@@ -93,6 +94,25 @@ function resolveToken(explicit?: string): string {
 
 function resolveApiUrl(explicit?: string): string {
   return explicit || process.env.RIVIUM_TRACE_API_URL || DEFAULT_API_URL;
+}
+
+/**
+ * Project ID lookup order: explicit --project flag → RIVIUM_TRACE_PROJECT
+ * env var → legacy RIVIUM_TRACE_DSN env var (kept so existing CI configs
+ * don't break silently). Explicit --dsn is handled at the cli layer.
+ */
+function resolveProject(explicit?: string): string {
+  const projectId =
+    explicit ||
+    process.env.RIVIUM_TRACE_PROJECT ||
+    process.env.RIVIUM_TRACE_DSN;
+  if (!projectId) {
+    throw new Error(
+      'No project ID provided. Pass --project <id> or set RIVIUM_TRACE_PROJECT. ' +
+      'Copy your project ID from the Trace dashboard.',
+    );
+  }
+  return projectId;
 }
 
 /**

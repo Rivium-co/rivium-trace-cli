@@ -16,12 +16,18 @@ npm install --save-dev @rivium-trace/cli
 
 ```bash
 npx @rivium-trace/cli sourcemaps upload \
-  --dsn <your-project-dsn> \
+  --project <your-project-id> \
   --release "1.2.3" \
   ./sourcemaps
 ```
 
 That's it. Every `.map` file under `./sourcemaps` is uploaded and tagged with the given release. Rivium Trace will use them to translate minified stack traces into readable source locations.
+
+**Where do I find my project ID?** Open your project in the Rivium Trace dashboard — the ID appears in the URL:
+```
+https://console.rivium.co/dashboard/rivium-trace/<PROJECT_ID>/...
+```
+Or copy it from **Project Settings → Project ID**.
 
 ### Authentication
 
@@ -45,7 +51,7 @@ npx @rivium-trace/cli sourcemaps upload --token rv_pat_xxx ...
 
 | Flag | Description | Default |
 |---|---|---|
-| `--dsn <dsn>` | Project DSN (required) | — |
+| `--project <id>` | Project ID | `RIVIUM_TRACE_PROJECT` env var |
 | `--release <ver>` | Release version this bundle belongs to (required) | — |
 | `--token <token>` | Personal access token | `RIVIUM_TRACE_TOKEN` env var |
 | `--api-url <url>` | Trace API URL — override for self-hosted | `RIVIUM_TRACE_API_URL` env var or `https://trace.rivium.co` |
@@ -68,7 +74,7 @@ find .next/static/chunks -name "*.js.map" -exec cp {} ./sourcemaps \;
 
 # 3. Upload to Rivium Trace, tagged with the release version
 npx @rivium-trace/cli sourcemaps upload \
-  --dsn "$RIVIUM_TRACE_DSN" \
+  --project "$RIVIUM_TRACE_PROJECT" \
   --release "$NEXT_PUBLIC_APP_VERSION" \
   ./sourcemaps
 
@@ -78,7 +84,7 @@ find .next/static/chunks -name "*.js.map" -delete
 find .next/static/chunks -name "*.js" -exec sed -i '/^\/\/# sourceMappingURL=/d' {} +
 ```
 
-Set `RIVIUM_TRACE_TOKEN` and `RIVIUM_TRACE_DSN` in your CI environment as secrets.
+Set `RIVIUM_TRACE_TOKEN` and `RIVIUM_TRACE_PROJECT` in your CI environment as secrets.
 
 ## Self-hosted Rivium Trace
 
@@ -86,7 +92,7 @@ If you run Rivium Trace on your own infrastructure, point the CLI at your API:
 
 ```bash
 export RIVIUM_TRACE_API_URL=https://trace.mycompany.com
-npx @rivium-trace/cli sourcemaps upload --dsn ... --release ... ./sourcemaps
+npx @rivium-trace/cli sourcemaps upload --project ... --release ... ./sourcemaps
 ```
 
 ## Exit codes

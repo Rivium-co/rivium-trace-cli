@@ -19,7 +19,8 @@ const sourcemaps = program
 sourcemaps
   .command('upload <directory>')
   .description('Upload every .map file in <directory> to a Rivium Trace release')
-  .requiredOption('--dsn <dsn>', 'Project DSN (from the Trace dashboard)')
+  .option('--project <id>', 'Project ID (copy from the Trace project page). Falls back to RIVIUM_TRACE_PROJECT env var')
+  .option('--dsn <id>', 'Alias for --project (kept for backward compatibility)')
   .requiredOption('--release <version>', 'Release version this bundle belongs to (e.g. "1.2.3")')
   .option('--token <token>', 'Personal access token (rv_pat_xxx). Falls back to RIVIUM_TRACE_TOKEN env var')
   .option('--api-url <url>', 'Override Trace API URL (default: https://trace.rivium.co, or RIVIUM_TRACE_API_URL env var)')
@@ -28,7 +29,7 @@ sourcemaps
     try {
       await sourcemapsUpload({
         directory,
-        dsn: options.dsn,
+        project: options.project || options.dsn,
         release: options.release,
         token: options.token,
         apiUrl: options.apiUrl,
